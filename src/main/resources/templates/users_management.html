@@ -1,0 +1,129 @@
+<!-- users_management.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="index.html">User Management</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="index.html">Home</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="users.html">Users</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="users_management.html">Manage Users</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <h1 class="mb-4">User Management</h1>
+
+    <div class="form-row mb-3">
+        <div class="col">
+            <input type="text" class="form-control" id="searchInput" placeholder="Search by name">
+        </div>
+        <div class="col">
+            <select class="form-control" id="sortSelect">
+                <option value="id">Sort by ID</option>
+                <option value="firstName">Sort by First Name</option>
+                <option value="lastName">Sort by Last Name</option>
+            </select>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="userTableBody">
+
+        </tbody>
+    </table>
+
+    <nav aria-label="User navigation">
+        <ul class="pagination" id="pagination">
+        </ul>
+    </nav>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var currentPage = 1;
+        var usersPerPage = 5;
+
+        function loadUsers() {
+            var searchInput = $("#searchInput").val();
+            var sortCriteria = $("#sortSelect").val();
+            $.ajax({
+                url: "/api/users",
+                type: "GET",
+                dataType: "json",
+                data: {
+                    search: searchInput,
+                    sort: sortCriteria,
+                    page: currentPage,
+                    size: usersPerPage
+                },
+                success: function(data) {
+                    $("#userTableBody").empty();
+                    data.forEach(function(user) {
+                        var row = "<tr>" +
+                            "<td>" + user.id + "</td>" +
+                            "<td>" + user.firstName + "</td>" +
+                            "<td>" + user.lastName + "</td>" +
+                            "<td><button class='btn btn-primary btn-sm' onclick='updateUser(" + user.id + ", \"" + user.firstName + "\", \"" + user.lastName + "\")'>Edit</button> " +
+                            "<button class='btn btn-danger btn-sm' onclick='deleteUser(" + user.id + ")'>Delete</button></td>" +
+                            "</tr>";
+                        $("#userTableBody").append(row);
+                    });
+                    generatePagination(data.totalPages);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+
+        function generatePagination(totalPages) {
+            $("#pagination").empty();
+            for (var i = 1; i <= totalPages; i++) {
+                var listItem = "<li class='page-item " + (i === currentPage ? 'active' : '') + "'><a class='page-link' href='#' onclick='changePage(" + i + ")'>" + i + "</a></li>";
+                $("#pagination").append(listItem);
+            }
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadUsers();
+        }
+
+        // Add event listeners
+        $("#searchInput, #sortSelect").change(function() {
+            loadUsers();
+        });
+
+        loadUsers();
+    });
+</script>
+</body>
+</html>

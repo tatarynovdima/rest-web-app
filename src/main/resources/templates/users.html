@@ -1,0 +1,184 @@
+<!-- users.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="index.html">User Management</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" href="index.html">Home</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="users.html">Users</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="users_management.html">Manage Users</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container mt-5">
+  <h1 class="mb-4">User Management</h1>
+  <table class="table">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Action</th>
+    </tr>
+    </thead>
+    <tbody id="userTableBody">
+
+    </tbody>
+  </table>
+
+  <div class="mb-3">
+    <h2>Add User</h2>
+    <form id="addUserForm">
+      <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input type="text" class="form-control" id="firstName" required>
+      </div>
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input type="text" class="form-control" id="lastName" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Add User</button>
+    </form>
+  </div>
+
+  <div class="mb-3">
+    <h2>Update User</h2>
+    <form id="updateUserForm">
+      <div class="form-group">
+        <label for="updateUserId">User ID</label>
+        <input type="text" class="form-control" id="updateUserId" required>
+      </div>
+      <div class="form-group">
+        <label for="updateFirstName">First Name</label>
+        <input type="text" class="form-control" id="updateFirstName" required>
+      </div>
+      <div class="form-group">
+        <label for="updateLastName">Last Name</label>
+        <input type="text" class="form-control" id="updateLastName" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Update User</button>
+    </form>
+  </div>
+
+  <div class="mb-3">
+    <h2>Delete User</h2>
+    <form id="deleteUserForm">
+      <div class="form-group">
+        <label for="deleteUserId">User ID</label>
+        <input type="text" class="form-control" id="deleteUserId" required>
+      </div>
+      <button type="submit" class="btn btn-danger">Delete User</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+  $(document).ready(function() {
+    function loadUsers() {
+      $.ajax({
+        url: "/api/users",
+        type: "GET",
+        dataType: "json",
+        success: function(data) {
+          $("#userTableBody").empty();
+          data.forEach(function(user) {
+            var row = "<tr>" +
+                    "<td>" + user.id + "</td>" +
+                    "<td>" + user.firstName + "</td>" +
+                    "<td>" + user.lastName + "</td>" +
+                    "<td><button class='btn btn-primary btn-sm' onclick='updateUser(" + user.id + ", \"" + user.firstName + "\", \"" + user.lastName + "\")'>Edit</button> " +
+                    "<button class='btn btn-danger btn-sm' onclick='deleteUser(" + user.id + ")'>Delete</button></td>" +
+                    "</tr>";
+            $("#userTableBody").append(row);
+          });
+        },
+        error: function(xhr, status, error) {
+          console.error(xhr.responseText);
+        }
+      });
+    }
+
+    function addUser(firstName, lastName) {
+      $.ajax({
+        url: "/api/users/addUser",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+          firstName: firstName,
+          lastName: lastName
+        }),
+        success: function() {
+          loadUsers();
+          $("#addUserForm")[0].reset();
+        },
+        error: function(xhr, status, error) {
+          console.error(xhr.responseText);
+        }
+      });
+    }
+
+    function updateUser(id, firstName, lastName) {
+      $("#updateUserId").val(id);
+      $("#updateFirstName").val(firstName);
+      $("#updateLastName").val(lastName);
+    }
+
+    function deleteUser(id) {
+      $.ajax({
+        url: "/api/users/deleteUser/" + id,
+        type: "DELETE",
+        success: function() {
+          loadUsers();
+        },
+        error: function(xhr, status, error) {
+          console.error(xhr.responseText);
+        }
+      });
+    }
+
+    $("#addUserForm").submit(function(event) {
+      event.preventDefault();
+      var firstName = $("#firstName").val();
+      var lastName = $("#lastName").val();
+      addUser(firstName, lastName);
+    });
+
+    $("#updateUserForm").submit(function(event) {
+      event.preventDefault();
+      var id = $("#updateUserId").val();
+      var firstName = $("#updateFirstName").val();
+      var lastName = $("#updateLastName").val();
+      updateUser(id, firstName, lastName);
+    });
+
+    $("#deleteUserForm").submit(function(event) {
+      event.preventDefault();
+      var id = $("#deleteUserId").val();
+      deleteUser(id);
+    });
+
+    loadUsers();
+  });
+</script>
+</body>
+</html>
